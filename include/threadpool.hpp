@@ -29,5 +29,5 @@ public:
     ~ThreadPool();
 };
 
-#include "threadpool.tcc"
+#include "../src/threadpool.tcc"
 #endif //PROJECT_THREADPOOL_HPP
