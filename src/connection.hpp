@@ -8,18 +8,25 @@
 #include <boost/asio.hpp>
 #include "request_handler.hpp"
 
-class Connection {
-
+class Connection
+        : public std::enable_shared_from_this<Connection> {
     using bait = boost::asio::ip::tcp;
 
     bait::socket tcpSocket;
     RequestHandler requestHandler;
     std::function<void (std::shared_ptr<Connection>)> abortedCallback;
 
-public:
+    static const int BUFFER_SIZE = 8192;
+    std::array<char, BUFFER_SIZE> buffer;
+    size_t messageSize;
+    std::vector<char> message;
 
+    void handle_message(const std::vector<char>& newMessage);
+
+public:
     void read();
-    void write();
+    void write(const std::vector<char>& message);
+    void close();
 
     Connection(const bait::socket tcpSocket, const RequestHandler& requestHandler,
                std::function<void (std::shared_ptr<Connection>)> abortedCallback);

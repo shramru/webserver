@@ -16,11 +16,16 @@ class ThreadPool {
     std::condition_variable condition;
     bool stop;
 
+    std::atomic<size_t> busy;
+
+    void add_worker(size_t count = 1);
+
 public:
     template<class F, class... Args>
     auto enqueue(F&& f, Args&&... args);
+    size_t size();
 
-    ThreadPool(size_t);
+    ThreadPool(size_t threads);
     ~ThreadPool();
 };
 

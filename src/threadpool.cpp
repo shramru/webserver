@@ -4,8 +4,20 @@
 #include "threadpool.hpp"
 
 ThreadPool::ThreadPool(size_t threads)
-        : stop(false) {
-    for(size_t i = 0; i < threads; ++i)
+        : stop(false), busy(0) { add_worker(threads); }
+
+ThreadPool::~ThreadPool() {
+    {
+        std::unique_lock<std::mutex> lock(queue_mutex);
+        stop = true;
+    }
+    condition.notify_all();
+    for(auto& worker: workers)
+        worker.join();
+}
+
+void ThreadPool::add_worker(size_t count) {
+    for(size_t i = 0; i < count; ++i)
         workers.emplace_back(
                 [this] {
                     for(;;) {
@@ -19,20 +31,17 @@ ThreadPool::ThreadPool(size_t threads)
                                 return;
                             task = std::move(this->tasks.front());
                             this->tasks.pop();
+
                         }
 
+                        ++busy;
                         task();
+                        --busy;
                     }
                 }
         );
 }
 
-ThreadPool::~ThreadPool() {
-    {
-        std::unique_lock<std::mutex> lock(queue_mutex);
-        stop = true;
-    }
-    condition.notify_all();
-    for(auto& worker: workers)
-        worker.join();
+size_t ThreadPool::size() {
+    return workers.size();
 }

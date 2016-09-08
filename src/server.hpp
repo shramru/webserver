@@ -12,13 +12,13 @@
 #include "threadpool.hpp"
 
 class Server {
-
     using bait = boost::asio::ip::tcp;
 
     RequestHandler requestHandler;
     ThreadPool threadPool;
 
     boost::asio::io_service ioService;
+    boost::asio::signal_set signalSet;
     bait::acceptor tcpAcceptor;
     bait::socket tcpSocket;
 
@@ -26,9 +26,11 @@ class Server {
 
 public:
     void listen();
+    void stop();
 
     Server(const std::string& address, const std::string & port, const std::string& directory,
            size_t workers = std::thread::hardware_concurrency());
+    ~Server();
 };
 
 
