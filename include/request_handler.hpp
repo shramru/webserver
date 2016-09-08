@@ -9,6 +9,8 @@
 #include <unordered_map>
 
 class RequestHandler {
+    static const unsigned BUFFER_SIZE = 8192;
+
     std::string root_dir;
     mutable std::unordered_map<std::string, std::string> ext_to_mime =
             {
@@ -27,6 +29,11 @@ class RequestHandler {
             "<html>"
             "<head><title>Not Found</title></head>"
             "<body><h1>404 Not Found</h1></body>"
+            "</html>";
+    const char* forbidden =
+            "<html>"
+            "<head><title>Forbidden</title></head>"
+            "<body><h1>403 Forbidden</h1></body>"
             "</html>";
     const char* not_allowed =
             "<html>"

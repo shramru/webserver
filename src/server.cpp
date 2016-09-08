@@ -11,6 +11,8 @@ Server::Server(const std::string &address, const std::string & port, const std::
     tcpAcceptor.open(endpoint.protocol());
     tcpAcceptor.set_option(bait::acceptor::reuse_address(true));
     tcpAcceptor.bind(endpoint);
+
+    std::cout << "Highload WebServer successfully started" << std::endl;
     tcpAcceptor.listen();
 
     signalSet.add(SIGINT);
@@ -26,8 +28,10 @@ void Server::listen() {
     for (;;) {
         boost::system::error_code ec;
         tcpAcceptor.accept(tcpSocket, ec);
-        if (ec) {
 
+        if (ec) {
+            if (ec.value() != boost::asio::error::interrupted)
+                std::cout << "Acceptor ERROR: " << ec.message() << std::endl;
             return;
         }
 

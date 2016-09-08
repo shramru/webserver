@@ -10,24 +10,33 @@ Connection::Connection(boost::asio::ip::tcp::socket tcpSocket, const RequestHand
           abortedCallback(abortedCallback), messageSize(0) {}
 
 void Connection::read() {
-    boost::system::error_code ec;
-    size_t bytesRead = tcpSocket.read_some(boost::asio::buffer(buffer), ec);
+    for (;;) {
+        boost::system::error_code ec;
+        size_t bytesRead = tcpSocket.read_some(boost::asio::buffer(buffer), ec);
 
-    if (ec) {
-        close();
-        return;
+        if (ec) {
+            if (ec != boost::asio::error::eof)
+                std::cout << "Connection ERROR: " << ec.message() << std::endl;
+
+            close();
+            return;
+        }
+
+        if (messageSize == 0) {
+            messageSize = tcpSocket.available();
+            message.clear();
+            message.insert(message.end(), buffer.begin(), buffer.begin() + bytesRead);
+        } else {
+            messageSize -= bytesRead;
+        }
+
+        if (messageSize == 0) {
+            requestHandler.handle_request(std::string(message.begin(), message.end()),
+                                          std::bind(&Connection::write, this, std::placeholders::_1));
+            close();
+            return;
+        }
     }
-
-    if (messageSize == 0) {
-        messageSize = tcpSocket.available();
-        message.clear();
-        message.insert(message.end(), buffer.begin(), buffer.begin() + bytesRead);
-    } else {
-        messageSize -= bytesRead;
-    }
-
-    if (messageSize == 0)
-        handle_message(std::string(message.begin(), message.end()));
 }
 
 void Connection::write(const std::string& message) {
@@ -35,11 +44,6 @@ void Connection::write(const std::string& message) {
 }
 
 void Connection::close() {
-    tcpSocket.close();
+    if (tcpSocket.is_open()) tcpSocket.close();
     abortedCallback(shared_from_this());
-}
-
-void Connection::handle_message(const std::string& request) {
-    requestHandler.handle_request(request, std::bind(&Connection::write, this, std::placeholders::_1));
-    close();
 }

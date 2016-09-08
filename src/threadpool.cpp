@@ -27,7 +27,7 @@ void ThreadPool::add_worker(size_t count) {
                         {
                             std::unique_lock<std::mutex> lock(this->queue_mutex);
                             size_t free = workers.size() - busy;
-                            if (free > init_size) {
+                            if (free > init_size && this->tasks.empty()) {
                                 auto id = std::this_thread::get_id();
                                 workers[id].detach();
                                 workers.erase(id);

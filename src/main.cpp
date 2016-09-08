@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
                 port = optarg;
                 break;
             case 'c':
-                workers = (size_t)strtol(optarg, NULL, 10);
+                workers = (size_t)std::stoi(optarg);
                 break;
             default:
                 break;

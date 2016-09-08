@@ -7,6 +7,7 @@
 
 #include <boost/asio.hpp>
 #include <functional>
+#include <iostream>
 #include "request_handler.hpp"
 
 class Connection

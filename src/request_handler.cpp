@@ -57,16 +57,16 @@ void RequestHandler::GET(const std::string &url, const std::string &protocol,
         headers += file_headers(file_size(path), ext);
         writeCallback(build_headers(protocol, get_code(code), headers));
         std::ifstream in(path);
-        static const unsigned BUFFER_SIZE = 8192;
+
         char buffer[BUFFER_SIZE];
         while (size_t count = (size_t)in.readsome(buffer, BUFFER_SIZE)) {
             writeCallback(std::string(buffer, count));
         }
     } else {
-        code = 404;
-        headers += file_headers(strlen(not_found), "html");
+        code = (dir) ? 403 : 404;
+        headers += file_headers(strlen((dir) ? forbidden : not_found), "html");
         writeCallback(build_headers(protocol, get_code(code), headers));
-        writeCallback(not_found);
+        writeCallback((dir) ? forbidden : not_found);
     }
 }
 
@@ -87,10 +87,10 @@ void RequestHandler::HEAD(const std::string &url, const std::string &protocol,
         headers += file_headers(file_size(path), ext);
         writeCallback(build_headers(protocol, get_code(code), headers));
     } else {
-        code = 404;
-        headers += file_headers(strlen(not_found), "html");
+        code = (dir) ? 403 : 404;
+        headers += file_headers(strlen((dir) ? forbidden : not_found), "html");
         writeCallback(build_headers(protocol, get_code(code), headers));
-        writeCallback(not_found);
+        writeCallback((dir) ? forbidden : not_found);
     }
 }
 
@@ -170,6 +170,8 @@ std::string RequestHandler::get_code(int code) const {
     switch (code) {
         case 200:
             return "200 OK";
+        case 403:
+            return "403 Forbidden";
         case 404:
             return "404 Not Found";
         case 405:
