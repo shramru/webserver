@@ -24,10 +24,10 @@ auto ThreadPool::enqueue(F&& f, Args&&... args) {
             throw std::runtime_error("Enqueue on stopped ThreadPool");
 
         tasks.emplace([task](){ (*task)(); });
-    }
 
-    if (size() - busy == 0) add_worker();
-    //TODO cleaning
+        if (size() - busy == 0)
+            add_worker();
+    }
 
     condition.notify_one();
     return res;

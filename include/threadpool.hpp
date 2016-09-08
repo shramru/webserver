@@ -5,17 +5,19 @@
 #ifndef PROJECT_THREADPOOL_HPP
 #define PROJECT_THREADPOOL_HPP
 
+#include <map>
 #include <queue>
 #include <future>
+#include <algorithm>
 
 class ThreadPool {
-    std::vector< std::thread > workers;
-    std::queue< std::function<void()> > tasks;
+    std::map<std::thread::id, std::thread> workers;
+    std::queue<std::function<void()>> tasks;
 
     std::mutex queue_mutex;
     std::condition_variable condition;
     bool stop;
-
+    size_t init_size;
     std::atomic<size_t> busy;
 
     void add_worker(size_t count = 1);

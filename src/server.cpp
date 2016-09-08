@@ -23,25 +23,30 @@ Server::~Server() {
 }
 
 void Server::listen() {
-    boost::system::error_code ec;
-    tcpAcceptor.accept(tcpSocket, ec);
-    if (ec) {
+    for (;;) {
+        boost::system::error_code ec;
+        tcpAcceptor.accept(tcpSocket, ec);
+        if (ec) {
 
-        return;
+            return;
+        }
+
+        ConnectionPtr connection = std::make_shared<Connection>(std::move(tcpSocket), requestHandler,
+                                                                [this](ConnectionPtr connectionPtr) {
+                                                                    std::unique_lock<std::mutex> lock(disconnect_mutex);
+                                                                    connectedClients.erase(connectionPtr);
+                                                                });
+        {
+            std::unique_lock<std::mutex> lock(disconnect_mutex);
+            connectedClients.insert(connection);
+        }
+
+        threadPool.enqueue(std::bind(&Connection::read, &*connection));
     }
-
-    ConnectionPtr connection = std::make_shared<Connection>(std::move(tcpSocket), requestHandler,
-                                                            [this] (ConnectionPtr connectionPtr) {
-                                                                //connectedClients.erase(connectionPtr); //todo critical section!!!
-                                                            });
-    connectedClients.insert(connection);
-
-    threadPool.enqueue(std::bind(&Connection::read, &*connection));
-
-    listen();
 }
 
 void Server::stop() {
+    std::unique_lock<std::mutex> lock(disconnect_mutex);
     tcpAcceptor.close();
     tcpSocket.close();
     for (auto& cli: connectedClients)

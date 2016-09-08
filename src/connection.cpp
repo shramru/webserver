@@ -28,8 +28,6 @@ void Connection::read() {
 
     if (messageSize == 0)
         handle_message(std::string(message.begin(), message.end()));
-
-    read();
 }
 
 void Connection::write(const std::string& message) {

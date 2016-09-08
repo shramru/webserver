@@ -16,6 +16,7 @@ class Server {
 
     RequestHandler requestHandler;
     ThreadPool threadPool;
+    std::mutex disconnect_mutex;
 
     boost::asio::io_service ioService;
     boost::asio::signal_set signalSet;
