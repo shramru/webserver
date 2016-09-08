@@ -2,8 +2,6 @@
 #include "server.hpp"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-
     try {
         Server server("0.0.0.0", "8080", "/home/vladislav");
         server.listen();

@@ -4,12 +4,10 @@
 
 #include "connection.hpp"
 
-Connection::Connection(boost::asio::ip::tcp::socket tcpSocket, const RequestHandler &requestHandler,
+Connection::Connection(boost::asio::ip::tcp::socket tcpSocket, const RequestHandler& requestHandler,
                        std::function<void (ConnectionPtr)> abortedCallback)
-        : tcpSocket(std::move(tcpSocket)), requestHandler(requestHandler),
-          abortedCallback(abortedCallback), messageSize(0) {
-
-}
+        : requestHandler(requestHandler), tcpSocket(std::move(tcpSocket)),
+          abortedCallback(abortedCallback), messageSize(0) {}
 
 void Connection::read() {
     boost::system::error_code ec;
@@ -30,12 +28,12 @@ void Connection::read() {
     }
 
     if (messageSize == 0)
-        handle_message(message);
+        handle_message(std::string(message.begin(), message.end()));
 
     read();
 }
 
-void Connection::write(const std::vector<char> &message) {
+void Connection::write(const std::string& message) {
     tcpSocket.write_some(boost::asio::buffer(message));
 }
 
@@ -43,9 +41,6 @@ void Connection::close() {
     tcpSocket.close();
 }
 
-void Connection::handle_message(const std::vector<char>& newMessage) {
-    std::string request(newMessage.begin(), newMessage.end());
-    std::string response;
-    requestHandler.handle_request(request, response);
-    write(std::vector<char>(response.begin(), response.end()));
+void Connection::handle_message(const std::string& request) {
+    requestHandler.handle_request(request, std::bind(&Connection::write, this, std::placeholders::_1));
 }

@@ -11,53 +11,115 @@
 RequestHandler::RequestHandler(const std::string &dir)
         : root_dir(dir) {}
 
-void RequestHandler::handle_request(const std::string &request, std::string &response) const {
+void RequestHandler::handle_request(const std::string &request, std::function<void (const std::string&)> writeCallback) const {
     std::istringstream iss(request);
     std::string method, url, protocol;
     iss >> method >> url >> protocol;
+    url = url_decode(url);
 
-    std::string headers, body;
-    int code;
-    headers = message_headers();
+    size_t pos;
+    if ((pos = url.find('?')) != std::string::npos) {
+        url = url.substr(0, pos);
+    }
 
     if (method == "GET") {
-        if (get_file(url, body)) {
-            headers += file_headers(body.size(), get_extension(url));
-            code = 200;
-        } else {
-            code = 404; //todo content
-        }
+        GET(url, protocol, writeCallback);
     } else if (method == "HEAD") {
-        code = 200;
+        HEAD(url, protocol, writeCallback);
     } else if (method == "POST" || method == "PUT" || method == "PATCH" ||
                method == "DELETE" || method == "TRACE" || method == "CONNECT" ||
                method == "OPTIONS") {
-        code = 405;
+        NotAllowed(protocol, writeCallback);
     } else {
-        code = 501;
+        NotImplemented(protocol, writeCallback);
+    }
+}
+
+void RequestHandler::GET(const std::string &url, const std::string &protocol,
+                         std::function<void (const std::string&)> writeCallback) const {
+    std::string path = root_dir + url;
+    int code;
+    bool dir;
+    if ((dir = is_directory(path))) {
+        if (path.back() != '/') path += '/';
+        path += "index.html";
     }
 
-    response = build_response(protocol, get_code(code), headers, body);
+    std::string headers(message_headers());
+
+    if (file_exists(path)) {
+        code = 200;
+        std::string ext = dir ? "html" : get_extension(url);
+        headers += file_headers(file_size(path), ext);
+        writeCallback(build_headers(protocol, get_code(code), headers));
+        std::ifstream in(path);
+        static const unsigned BUFFER_SIZE = 8192;
+        char buffer[BUFFER_SIZE];
+        while (size_t count = (size_t)in.readsome(buffer, BUFFER_SIZE)) {
+            writeCallback(std::string(buffer, count));
+        }
+    } else {
+        code = 404; //todo content
+        writeCallback(build_headers(protocol, get_code(code), headers));
+    }
+}
+
+void RequestHandler::HEAD(const std::string &url, const std::string &protocol,
+                          std::function<void(const std::string &)> writeCallback) const {
+    std::string path = root_dir + url;
+    int code;
+    bool dir;
+    if ((dir = is_directory(path))) {
+        if (path.back() != '/') path += '/';
+        path += "index.html";
+    }
+
+    std::string headers(message_headers());
+    if (file_exists(path)) {
+        code = 200;
+        std::string ext = dir ? "html" : get_extension(url);
+        headers += file_headers(file_size(path), ext);
+    } else {
+        code = 404;
+    }
+    writeCallback(build_headers(protocol, get_code(code), headers));
+}
+
+void RequestHandler::NotAllowed(const std::string &protocol,
+                                std::function<void(const std::string &)> writeCallback) const {
+    int code = 405;
+    std::string headers(message_headers());
+    writeCallback(build_headers(protocol, get_code(code), headers));
+}
+
+void RequestHandler::NotImplemented(const std::string &protocol,
+                                std::function<void(const std::string &)> writeCallback) const {
+    int code = 501;
+    std::string headers(message_headers());
+    writeCallback(build_headers(protocol, get_code(code), headers));
+}
+
+std::string RequestHandler::url_decode(const std::string &url) const {
+    std::string res;
+
+    for (size_t i = 0; i < url.length(); ++i) {
+        if (url[i] == '%') {
+            int val;
+            sscanf(url.substr(i + 1, 2).c_str(), "%x", &val);
+            res += (char)val;
+            i += 2;
+        } else if (url[i] == '+') {
+            res += ' ';
+        } else {
+            res += url[i];
+        }
+    }
+    return res;
 }
 
 bool RequestHandler::is_directory(const std::string& path) const {
     struct stat s;
     return (stat(path.c_str(), &s) == 0) && (s.st_mode & S_IFDIR);
-}
-
-bool RequestHandler::get_file(const std::string &url, std::string &file) const {
-    //todo переделать в мгновенное считывание и отправку
-    std::string path = root_dir + url;
-    if (is_directory(path))
-        path += "index.html";
-
-    std::ifstream in(path);
-    if (!in.good()) return false;
-
-    std::stringstream buffer;
-    buffer << in.rdbuf();
-    file = buffer.str();
-    return true;
 }
 
 std::string RequestHandler::message_headers() const {
@@ -76,9 +138,19 @@ std::string RequestHandler::file_headers(size_t length, const std::string& ext) 
     return headers.str();
 }
 
+size_t RequestHandler::file_size(const std::string& path) const {
+    std::ifstream in(path, std::ifstream::ate | std::ifstream::binary);
+    return (size_t)in.tellg();
+}
+
+bool RequestHandler::file_exists(const std::string &path) const {
+    std::ifstream in(path);
+    return in.good();
+}
+
 std::string RequestHandler::get_extension(const std::string &url) const {
     size_t pos = url.find_last_of('.');
-    return (pos != std::string::npos) ? url.substr(pos + 1) : "html";
+    return (pos != std::string::npos) ? url.substr(pos + 1) : "txt";
 }
 
 std::string RequestHandler::get_code(int code) const {
@@ -96,9 +168,9 @@ std::string RequestHandler::get_code(int code) const {
     }
 }
 
-std::string RequestHandler::build_response(const std::string &protocol, const std::string &code,
-                                           const std::string &headers, const std::string &body) const {
+std::string RequestHandler::build_headers(const std::string &protocol, const std::string &code,
+                                          const std::string &headers) const {
     std::stringstream response;
-    response << protocol << ' ' << code << "\r\n" << headers << "\r\n" << body;
+    response << protocol << ' ' << code << "\r\n" << headers << "\r\n";
     return response.str();
 }

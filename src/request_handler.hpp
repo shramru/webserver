@@ -12,6 +12,7 @@ class RequestHandler {
     std::string root_dir;
     mutable std::unordered_map<std::string, std::string> ext_to_mime =
             {
+                    { "txt", "text/plain" },
                     { "html", "text/html" },
                     { "css", "text/css" },
                     { "js", "application/javascript" },
@@ -22,17 +23,28 @@ class RequestHandler {
                     { "swf", "application/x-shockwave-flash" }
             };
 
+    void GET(const std::string &url, const std::string &protocol,
+             std::function<void (const std::string&)> writeCallback) const;
+    void HEAD(const std::string &url, const std::string &protocol,
+             std::function<void (const std::string&)> writeCallback) const;
+    void NotAllowed(const std::string &protocol,
+                    std::function<void (const std::string&)> writeCallback) const;
+    void NotImplemented(const std::string &protocol,
+                    std::function<void (const std::string&)> writeCallback) const;
+
+    std::string url_decode(const std::string& url) const;
     std::string message_headers() const;
+    bool file_exists(const std::string& path) const;
+    size_t file_size(const std::string& path) const;
     std::string file_headers(size_t length, const std::string& ext) const;
     std::string get_extension(const std::string& url) const;
     bool is_directory(const std::string& path) const;
-    bool get_file(const std::string& url, std::string& file) const;
     std::string get_code(int code) const;
-    std::string build_response(const std::string& protocol, const std::string& code,
-                               const std::string& headers, const std::string& body = std::string()) const;
+    std::string build_headers(const std::string& protocol, const std::string& code,
+                               const std::string& headers) const;
 
 public:
-    void handle_request(const std::string& request, std::string& response) const;
+    void handle_request(const std::string& request, std::function<void (const std::string&)> writeCallback) const;
 
     RequestHandler(const std::string& dir);
 };
