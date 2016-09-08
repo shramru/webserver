@@ -23,6 +23,22 @@ class RequestHandler {
                     { "swf", "application/x-shockwave-flash" }
             };
 
+    const char* not_found =
+            "<html>"
+            "<head><title>Not Found</title></head>"
+            "<body><h1>404 Not Found</h1></body>"
+            "</html>";
+    const char* not_allowed =
+            "<html>"
+            "<head><title>Not Allowed</title></head>"
+            "<body><h1>404 Method Not Allowed</h1></body>"
+            "</html>";
+    const char* not_implemented =
+            "<html>"
+            "<head><title>Not Implemented</title></head>"
+            "<body><h1>501 Not Implemented</h1></body>"
+            "</html>";
+
     void GET(const std::string &url, const std::string &protocol,
              std::function<void (const std::string&)> writeCallback) const;
     void HEAD(const std::string &url, const std::string &protocol,

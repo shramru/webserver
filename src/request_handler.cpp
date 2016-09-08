@@ -59,8 +59,10 @@ void RequestHandler::GET(const std::string &url, const std::string &protocol,
             writeCallback(std::string(buffer, count));
         }
     } else {
-        code = 404; //todo content
+        code = 404;
+        headers += file_headers(strlen(not_found), "html");
         writeCallback(build_headers(protocol, get_code(code), headers));
+        writeCallback(not_found);
     }
 }
 
@@ -79,24 +81,31 @@ void RequestHandler::HEAD(const std::string &url, const std::string &protocol,
         code = 200;
         std::string ext = dir ? "html" : get_extension(url);
         headers += file_headers(file_size(path), ext);
+        writeCallback(build_headers(protocol, get_code(code), headers));
     } else {
         code = 404;
+        headers += file_headers(strlen(not_found), "html");
+        writeCallback(build_headers(protocol, get_code(code), headers));
+        writeCallback(not_found);
     }
-    writeCallback(build_headers(protocol, get_code(code), headers));
 }
 
 void RequestHandler::NotAllowed(const std::string &protocol,
                                 std::function<void(const std::string &)> writeCallback) const {
-    int code = 405;
+    const int code = 405;
     std::string headers(message_headers());
+    headers += file_headers(strlen(not_allowed), "html");
     writeCallback(build_headers(protocol, get_code(code), headers));
+    writeCallback(not_allowed);
 }
 
 void RequestHandler::NotImplemented(const std::string &protocol,
                                 std::function<void(const std::string &)> writeCallback) const {
-    int code = 501;
+    const int code = 501;
     std::string headers(message_headers());
+    headers += file_headers(strlen(not_implemented), "html");
     writeCallback(build_headers(protocol, get_code(code), headers));
+    writeCallback(not_implemented);
 }
 
 std::string RequestHandler::url_decode(const std::string &url) const {

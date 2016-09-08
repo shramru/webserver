@@ -42,6 +42,6 @@ void ThreadPool::add_worker(size_t count) {
         );
 }
 
-size_t ThreadPool::size() {
+size_t ThreadPool::size() const {
     return workers.size();
 }
