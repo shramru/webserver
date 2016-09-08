@@ -15,7 +15,6 @@ void Connection::read() {
 
     if (ec) {
         close();
-        abortedCallback(shared_from_this());
         return;
     }
 
@@ -39,8 +38,10 @@ void Connection::write(const std::string& message) {
 
 void Connection::close() {
     tcpSocket.close();
+    abortedCallback(shared_from_this());
 }
 
 void Connection::handle_message(const std::string& request) {
     requestHandler.handle_request(request, std::bind(&Connection::write, this, std::placeholders::_1));
+    close();
 }

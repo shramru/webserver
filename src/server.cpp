@@ -32,7 +32,7 @@ void Server::listen() {
 
     ConnectionPtr connection = std::make_shared<Connection>(std::move(tcpSocket), requestHandler,
                                                             [this] (ConnectionPtr connectionPtr) {
-                                                                connectedClients.erase(connectionPtr);
+                                                                //connectedClients.erase(connectionPtr); //todo critical section!!!
                                                             });
     connectedClients.insert(connection);
 

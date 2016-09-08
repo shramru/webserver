@@ -2,6 +2,8 @@
 // Created by vladislav on 13.06.16.
 //
 
+#include <iostream>
+
 #ifndef PROJECT_THREADPOOL_HPP
 #error Include threadpool.hpp instead of this
 #endif
@@ -25,6 +27,7 @@ auto ThreadPool::enqueue(F&& f, Args&&... args) {
     }
 
     if (size() - busy == 0) add_worker();
+    //TODO cleaning
 
     condition.notify_one();
     return res;

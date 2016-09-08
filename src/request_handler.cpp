@@ -16,8 +16,12 @@ void RequestHandler::handle_request(const std::string &request, std::function<vo
     std::string method, url, protocol;
     iss >> method >> url >> protocol;
     url = url_decode(url);
-
     size_t pos;
+
+    while ((pos = url.find("/..")) != std::string::npos) {
+        url.erase(pos, 3);
+    }
+
     if ((pos = url.find('?')) != std::string::npos) {
         url = url.substr(0, pos);
     }
