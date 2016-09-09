@@ -5,7 +5,6 @@
 #ifndef WEBSERVER_SERVER_HPP
 #define WEBSERVER_SERVER_HPP
 
-#include <boost/asio.hpp>
 #include <thread>
 #include <set>
 #include "connection.hpp"
@@ -19,7 +18,6 @@ class Server {
     std::mutex disconnect_mutex;
 
     boost::asio::io_service ioService;
-    boost::asio::signal_set signalSet;
     bait::acceptor tcpAcceptor;
     bait::socket tcpSocket;
 

@@ -5,7 +5,7 @@
 #include "server.hpp"
 
 Server::Server(const std::string &address, const std::string & port, const std::string &directory, size_t workers)
-        : requestHandler(directory), threadPool(workers), signalSet(ioService), tcpAcceptor(ioService), tcpSocket(ioService)  {
+        : requestHandler(directory), threadPool(workers), tcpAcceptor(ioService), tcpSocket(ioService)  {
     bait::resolver resolver(ioService);
     bait::endpoint endpoint = *resolver.resolve({address, port});
     tcpAcceptor.open(endpoint.protocol());
@@ -14,10 +14,6 @@ Server::Server(const std::string &address, const std::string & port, const std::
 
     std::cout << "Highload WebServer successfully started" << std::endl;
     tcpAcceptor.listen();
-
-    signalSet.add(SIGINT);
-    signalSet.add(SIGTERM);
-    signalSet.async_wait([this](boost::system::error_code, int) { stop(); });
 }
 
 Server::~Server() {

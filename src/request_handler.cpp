@@ -13,13 +13,13 @@ RequestHandler::RequestHandler(const std::string &dir)
 
 void RequestHandler::handle_request(const std::string &request, std::function<void (const std::string&)> writeCallback) const {
     std::istringstream iss(request);
-    std::string method, url, protocol;
+    std::string method, url, protocol = "HTTP/1.1";
     iss >> method >> url >> protocol;
     url = url_decode(url);
     size_t pos;
 
-    while ((pos = url.find("/..")) != std::string::npos) {
-        url.erase(pos, 3);
+    while ((pos = url.find("/../")) != std::string::npos) {
+        url.erase(pos, 4);
     }
 
     if ((pos = url.find('?')) != std::string::npos) {

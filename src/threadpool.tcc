@@ -2,8 +2,6 @@
 // Created by vladislav on 13.06.16.
 //
 
-#include <iostream>
-
 #ifndef PROJECT_THREADPOOL_HPP
 #error Include threadpool.hpp instead of this
 #endif

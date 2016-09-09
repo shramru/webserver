@@ -3,7 +3,6 @@
 //
 
 #include "threadpool.hpp"
-#include <experimental/functional>
 
 ThreadPool::ThreadPool(size_t threads)
         : stop(false), init_size(threads), busy(0) { add_worker(threads); }
