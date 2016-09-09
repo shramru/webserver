@@ -6,7 +6,7 @@ int main(int argc, char* argv[]) {
     size_t workers = 8;
 
     try {
-        if (argc < 3)
+        if (argc < 7)
             throw std::invalid_argument("Enter port, root_dir and workers count via command arguments");
 
         while((c = getopt(argc, argv, "r:c:p:")) != -1) {
