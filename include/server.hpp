@@ -28,7 +28,7 @@ public:
     void stop();
 
     Server(const std::string& address, const std::string & port, const std::string& directory,
-           size_t workers = std::thread::hardware_concurrency());
+           size_t workersMin, size_t workersMax);
     ~Server();
 };
 

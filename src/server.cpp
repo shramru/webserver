@@ -4,8 +4,9 @@
 
 #include "server.hpp"
 
-Server::Server(const std::string &address, const std::string & port, const std::string &directory, size_t workers)
-        : requestHandler(directory), threadPool(workers), tcpAcceptor(ioService), tcpSocket(ioService)  {
+Server::Server(const std::string &address, const std::string & port, const std::string &directory,
+               size_t workersMin, size_t workersMax)
+        : requestHandler(directory), threadPool(workersMin, workersMax), tcpAcceptor(ioService), tcpSocket(ioService)  {
     bait::resolver resolver(ioService);
     bait::endpoint endpoint = *resolver.resolve({address, port});
     tcpAcceptor.open(endpoint.protocol());

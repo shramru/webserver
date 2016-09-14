@@ -4,8 +4,8 @@
 
 #include "threadpool.hpp"
 
-ThreadPool::ThreadPool(size_t threads)
-        : stop(false), init_size(threads), busy(0) { add_worker(threads); }
+ThreadPool::ThreadPool(size_t threadsMin, size_t threadsMax)
+        : stop(false), initSize(threadsMin), maxSize(threadsMax), busy(0) { add_worker(threadsMin); }
 
 ThreadPool::~ThreadPool() {
     {
@@ -26,7 +26,7 @@ void ThreadPool::add_worker(size_t count) {
                         {
                             std::unique_lock<std::mutex> lock(this->queue_mutex);
                             size_t free = workers.size() - busy;
-                            if (free > init_size && this->tasks.empty()) {
+                            if (free > initSize && this->tasks.empty()) {
                                 auto id = std::this_thread::get_id();
                                 workers[id].detach();
                                 workers.erase(id);

@@ -17,7 +17,7 @@ class ThreadPool {
     std::mutex queue_mutex;
     std::condition_variable condition;
     bool stop;
-    size_t init_size;
+    size_t initSize, maxSize;
     std::atomic<size_t> busy;
 
     void add_worker(size_t count = 1);
@@ -27,7 +27,7 @@ public:
     auto enqueue(F&& f, Args&&... args);
     size_t size() const;
 
-    ThreadPool(size_t threads);
+    ThreadPool(size_t threadsMin, size_t threadsMax);
     ~ThreadPool();
 };
 

@@ -23,7 +23,7 @@ auto ThreadPool::enqueue(F&& f, Args&&... args) {
 
         tasks.emplace([task](){ (*task)(); });
 
-        if (size() - busy == 0)
+        if (size() < maxSize && size() - busy == 0)
             add_worker();
     }
 
