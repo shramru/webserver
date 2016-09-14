@@ -10,18 +10,19 @@
 #include <iostream>
 #include "request_handler.hpp"
 
-class Connection
-        : public std::enable_shared_from_this<Connection> {
+typedef std::unique_ptr<boost::asio::ip::tcp::socket> socketPtr;
+
+class Connection : public std::enable_shared_from_this<Connection> {
     using bait = boost::asio::ip::tcp;
 
     RequestHandler requestHandler;
-    bait::socket tcpSocket;
+    socketPtr tcpSocket;
     std::function<void (std::shared_ptr<Connection>)> abortedCallback;
 
     static const int BUFFER_SIZE = 8192;
-    std::array<char, BUFFER_SIZE> buffer;
-    size_t messageSize;
+    std::vector<char> buffer;
     std::vector<char> message;
+    size_t messageSize;
 
     void handle_message(const std::string& request);
 
@@ -30,7 +31,7 @@ public:
     void write(const std::string& message);
     void close();
 
-    Connection(const bait::socket tcpSocket, const RequestHandler& requestHandler,
+    Connection(socketPtr tcpSocket, const RequestHandler& requestHandler,
                std::function<void (std::shared_ptr<Connection>)> abortedCallback);
 };
 

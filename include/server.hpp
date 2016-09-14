@@ -19,7 +19,6 @@ class Server {
 
     boost::asio::io_service ioService;
     bait::acceptor tcpAcceptor;
-    bait::socket tcpSocket;
 
     std::set<ConnectionPtr> connectedClients;
 

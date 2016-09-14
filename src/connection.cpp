@@ -4,15 +4,15 @@
 
 #include "connection.hpp"
 
-Connection::Connection(boost::asio::ip::tcp::socket tcpSocket, const RequestHandler& requestHandler,
+Connection::Connection(socketPtr tcpSocket, const RequestHandler& requestHandler,
                        std::function<void (ConnectionPtr)> abortedCallback)
         : requestHandler(requestHandler), tcpSocket(std::move(tcpSocket)),
-          abortedCallback(abortedCallback), messageSize(0) {}
+          abortedCallback(abortedCallback), buffer(BUFFER_SIZE), messageSize(0) {}
 
 void Connection::read() {
     for (;;) {
         boost::system::error_code ec;
-        size_t bytesRead = tcpSocket.read_some(boost::asio::buffer(buffer), ec);
+        size_t bytesRead = tcpSocket->read_some(boost::asio::buffer(buffer), ec);
 
         if (ec) {
             if (ec != boost::asio::error::eof)
@@ -23,7 +23,7 @@ void Connection::read() {
         }
 
         if (messageSize == 0) {
-            messageSize = tcpSocket.available();
+            messageSize = tcpSocket->available();
             message.clear();
             message.insert(message.end(), buffer.begin(), buffer.begin() + bytesRead);
         } else {
@@ -40,10 +40,10 @@ void Connection::read() {
 }
 
 void Connection::write(const std::string& message) {
-    tcpSocket.write_some(boost::asio::buffer(message));
+    tcpSocket->write_some(boost::asio::buffer(message));
 }
 
 void Connection::close() {
-    if (tcpSocket.is_open()) tcpSocket.close();
+    if (tcpSocket->is_open()) tcpSocket->close();
     abortedCallback(shared_from_this());
 }

@@ -6,7 +6,7 @@
 
 Server::Server(const std::string &address, const std::string & port, const std::string &directory,
                size_t workersMin, size_t workersMax)
-        : requestHandler(directory), threadPool(workersMin, workersMax), tcpAcceptor(ioService), tcpSocket(ioService)  {
+        : requestHandler(directory), threadPool(workersMin, workersMax), tcpAcceptor(ioService)  {
     bait::resolver resolver(ioService);
     bait::endpoint endpoint = *resolver.resolve({address, port});
     tcpAcceptor.open(endpoint.protocol());
@@ -23,8 +23,9 @@ Server::~Server() {
 
 void Server::listen() {
     for (;;) {
+        socketPtr tcpSocket = std::make_unique<bait::socket>(ioService);
         boost::system::error_code ec;
-        tcpAcceptor.accept(tcpSocket, ec);
+        tcpAcceptor.accept(*tcpSocket, ec);
 
         if (ec) {
             if (ec.value() != boost::asio::error::interrupted)
@@ -49,7 +50,6 @@ void Server::listen() {
 void Server::stop() {
     std::unique_lock<std::mutex> lock(disconnect_mutex);
     tcpAcceptor.close();
-    tcpSocket.close();
     for (auto& cli: connectedClients)
         cli->close();
 }
