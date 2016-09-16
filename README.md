@@ -9,7 +9,7 @@ To build and run:
 By default:
 
 - min_cpus = &lt;count_of_cores&gt;
-- max_cpus = min_cpus * 2
+- max_cpus = min_cpus
 - port = 80
 - path_to_root_dir = &lt;current_dir&gt;
 

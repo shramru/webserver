@@ -8,8 +8,11 @@ std::string currentDirectory(const char* path) {
 int main(int argc, char* argv[]) {
     std::string root_dir = currentDirectory(argv[0]);
     std::string port = "80";
-    size_t workersMin = std::thread::hardware_concurrency();
-    size_t workersMax = workersMin * 2;
+
+    unsigned cores = std::thread::hardware_concurrency();
+
+    size_t workersMin = cores ? cores : 1;
+    size_t workersMax = workersMin;
 
     try {
         int c;
