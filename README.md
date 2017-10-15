@@ -1,4 +1,4 @@
-# Technopark Highload WebServer [![Build Status](https://travis-ci.org/shramru/webserver.svg?branch=master)](https://travis-ci.org/shramru/webserver)
+# Technopark Highload WebServer [![Build Status](https://travis-ci.org/smirnov-vs/webserver.svg?branch=master)](https://travis-ci.org/shramru/webserver)
 
 To build and run:
 
